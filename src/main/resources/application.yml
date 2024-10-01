@@ -1,5 +1,9 @@
+
 spring:
   # h2 설정
+  sql:
+    init:
+      mode: always
   h2:
     console:
       enabled: true
@@ -14,13 +18,22 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
-    show-sql: true
     properties:
       hibernate:
         default_batch_fetch_size: 100
         dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+        show_sql: true
+    defer-datasource-initialization: true
   application.name: hhplus-lecture
 
-logging:
-  level:
-    org.hibernate.type: info
+#logging:
+#  level:
+#    org.hibernate.type: info
+server:
+  port: 8082
+
+#decorator:
+#  datasource:
+#    p6spy:
+#      enable-logging: true
