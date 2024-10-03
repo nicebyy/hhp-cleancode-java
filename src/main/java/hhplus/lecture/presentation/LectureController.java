@@ -4,6 +4,7 @@ import hhplus.common.api.ApiResponse;
 import hhplus.lecture.application.LectureFacade;
 import hhplus.lecture.domain.entity.LectureItem;
 import hhplus.lecture.presentation.dto.*;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ public class LectureController {
 
     @PostMapping
     public ResponseEntity<ApiResponse> applyLecture(
-            @RequestBody ApplyLectureItemRequest dto
+            @RequestBody @Validated ApplyLectureItemRequest dto
     ){
         ApplyLectureItemResponse response = lectureFacade.applyLectureItem(dto);
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -41,9 +42,9 @@ public class LectureController {
 
     @GetMapping("/registration")
     public ResponseEntity<ApiResponse> searchRegistration(
-            @RequestParam("userId") Long userId
+            @ModelAttribute @Validated SearchRegistrationRequest dto
     ){
-        SearchRegistrationResponse response = lectureFacade.findRegistrationByUser(userId);
+        SearchRegistrationResponse response = lectureFacade.findRegistrationByUser(dto.getUserId());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

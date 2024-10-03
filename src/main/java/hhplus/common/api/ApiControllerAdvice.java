@@ -19,7 +19,7 @@ public class ApiControllerAdvice {
         return ResponseEntity.status(400).body(ApiResponse.failed(ex.getResponseCodeEnum()));
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ExceptionHandler({MethodArgumentNotValidException.class})
     public ResponseEntity<ApiResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
