@@ -1,11 +1,12 @@
 package hhplus.lecture.domain.entity;
 
-import hhplus.common.config.jpa.BaseTime;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Lecture{
 
@@ -13,9 +14,13 @@ public class Lecture{
     private Long lectureId;
 
     @Column
-    private String name;
+    private String lectureName;
 
-    public Lecture(String name){
-        this.name = name;
+    @Column
+    private String tutorName;
+
+    public Lecture(String lectureName, String tutorName){
+        this.lectureName = lectureName;
+        this.tutorName = tutorName;
     }
 }
