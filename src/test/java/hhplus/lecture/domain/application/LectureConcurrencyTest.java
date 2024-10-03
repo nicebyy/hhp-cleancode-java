@@ -62,8 +62,73 @@ class LectureConcurrencyTest {
         lectureJpaRepository.deleteAll();
     }
 
+    /**
+     * 한명이 동시에 5번 신청하면 한번만 성공한다.
+     */
     @Test()
-    void concurrencyTest() throws InterruptedException {
+    void concurrencyTestWithUserInOneLectureWithManyTry() throws InterruptedException {
+
+        User user = new User("유저1");
+        userJpaRepository.save(user);
+
+        Lecture lecture = new Lecture("강의", "강사");
+        lectureJpaRepository.save(lecture);
+
+        LectureItem lectureItem = new LectureItem(lecture, 30, LocalDateTime.now().plusDays(1));
+        lectureItemJpaRepository.save(lectureItem);
+
+        ApplyLectureItemRequest applyLectureItemRequest = new ApplyLectureItemRequest(user.getUserId(), lectureItem.getLectureItemId());
+
+        int numberOfThreads = 5;
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
+
+        // when
+        CountDownLatch latch = new CountDownLatch(numberOfThreads);
+
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failureCount = new AtomicInteger(0);
+        AtomicInteger otherErrorCount = new AtomicInteger(0);
+
+        for (int i = 0; i < numberOfThreads; i++) {
+            executorService.execute(() -> {
+                try {
+                    ApplyLectureItemResponse response = lectureFacade.applyLectureItem(applyLectureItemRequest);
+                    successCount.incrementAndGet();
+                } catch (BusinessException ex) {
+                    if (ex.getResponseCodeEnum() == NO_REMAINING_REGISTRATION) {
+                        failureCount.incrementAndGet();
+                    } else {
+                        otherErrorCount.incrementAndGet();
+                        log.error("Unexpected BusinessException: {}", ex.getMessage());
+                    }
+                } catch (Exception e) {
+                    otherErrorCount.incrementAndGet();
+                    log.error("Unexpected Exception: ", e);
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await();
+        executorService.shutdown();
+
+        boolean finished = executorService.awaitTermination(1, TimeUnit.MINUTES);
+        if (!finished) {
+            executorService.shutdownNow();
+        }
+
+        // Then
+        int expectedSuccess = 1;
+        log.info("success: {}", successCount.get());
+        assertEquals(expectedSuccess, successCount.get());
+    }
+
+    /**
+     * 50명이 동시에 하나의 강의에 신청하면 30명만 성공한다.
+     */
+    @Test()
+    void concurrencyTestWithManyUserInOneLecture() throws InterruptedException {
 
         List<User> userList = new ArrayList<User>();
         for (int i = 0; i < 50; i++) {
