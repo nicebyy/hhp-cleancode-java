@@ -27,6 +27,6 @@ public class LectureRegistration extends BaseTime {
     public LectureRegistration(User user, LectureItem lectureItem){
         this.user = user;
         this.lectureItem = lectureItem;
-        this.lectureItem.subtractCurrentCapacity();
+        this.lectureItem.addCurrentCapacity();
     }
 }

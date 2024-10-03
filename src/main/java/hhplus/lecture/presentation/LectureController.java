@@ -25,7 +25,7 @@ public class LectureController {
 
     @GetMapping
     public ResponseEntity<ApiResponse> searchLectureItemSearch(
-            @ModelAttribute SearchLectureItemRequest dto
+            @ModelAttribute @Validated SearchLectureItemRequest dto
     ){
         Map<LocalDateTime, List<SearchLectureItemResponse>> response = lectureFacade.findLectureItems(dto);
         return ResponseEntity.ok(ApiResponse.success(response));

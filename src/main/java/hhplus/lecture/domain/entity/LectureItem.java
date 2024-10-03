@@ -35,7 +35,7 @@ public class LectureItem{
         this.startTime = startTime;
     }
 
-    public void subtractCurrentCapacity(){
-        this.currentCapacity--;
+    public void addCurrentCapacity(){
+        this.currentCapacity++;
     }
 }
