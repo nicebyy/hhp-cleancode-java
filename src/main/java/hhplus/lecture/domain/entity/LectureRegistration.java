@@ -20,13 +20,13 @@ public class LectureRegistration extends BaseTime {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lecture_item_id")
     private LectureItem lectureItem;
 
     public LectureRegistration(User user, LectureItem lectureItem){
         this.user = user;
         this.lectureItem = lectureItem;
-        this.lectureItem.subtractCurrentCapacity();
+        this.lectureItem.addCurrentCapacity();
     }
 }
