@@ -1,7 +1,5 @@
 package hhplus.user.infrastructure;
 
-import hhplus.common.enums.ResponseCodeEnum;
-import hhplus.common.exception.BusinessException;
 import hhplus.user.domain.entity.User;
 import hhplus.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
