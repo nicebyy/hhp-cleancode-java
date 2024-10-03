@@ -17,7 +17,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
 
 @Component
 @RequiredArgsConstructor
@@ -27,27 +31,32 @@ public class LectureFacade {
     private final UserService userService;
     private final LectureService lectureService;
 
-    public Map<LocalDateTime, List<SearchLectureItemResponse>> findLectureItems(SearchLectureItemRequest dto){
+    public Map<LocalDateTime, List<SearchLectureItemResponse>> findLectureItems(SearchLectureItemRequest dto) {
 
-        LocalDateTime now = LocalDateTime.now();
-        int year = now.getYear();
-        int month = now.getMonth().getValue();
-        int day = now.getDayOfMonth();
+        LocalDateTime dateCond = getDateCond(dto);
 
-        if(dto.getYear() != null){
-            year = dto.getYear();
-        }
-        if(dto.getMonth() != null){
-            month = dto.getMonth();
-        }
-        if(dto.getDay() != null){
-            day = dto.getDay();
-        }
-        return lectureService.findAllLectureItems(dto.getLectureId(), LocalDate.of(year, month, day).atStartOfDay());
+        return lectureService.findAllLectureItems(dto.getLectureId(), dateCond)
+                .stream()
+                .map(lectureItem -> {
+                    return SearchLectureItemResponse.builder()
+                            .lectureId(lectureItem.getLecture().getLectureId())
+                            .lectureName(lectureItem.getLecture().getLectureName())
+                            .tutorName(lectureItem.getLecture().getTutorName())
+                            .startTime(lectureItem.getStartTime())
+                            .totalCapacity(lectureItem.getTotalCapacity())
+                            .currentCapacity(lectureItem.getCurrentCapacity())
+                            .build();
+                })
+                .collect(
+                        groupingBy(
+                                SearchLectureItemResponse::getStartTime,
+                                TreeMap::new, toList()
+                        )
+                );
     }
 
     @Transactional
-    public ApplyLectureItemResponse applyLectureItem(ApplyLectureItemRequest dto){
+    public ApplyLectureItemResponse applyLectureItem(ApplyLectureItemRequest dto) {
 
         User user = userService.findUserById(dto.getUserId());
         LectureItem lectureItem = lectureService.findLectureItemById(dto.getLectureItemId());
@@ -64,18 +73,19 @@ public class LectureFacade {
                 .build();
     }
 
-    private void checkRemainLecture(LectureItem lectureItem){
-        if(lectureItem.getTotalCapacity()<=lectureItem.getCurrentCapacity()){
+    private void checkRemainLecture(LectureItem lectureItem) {
+        if (lectureItem.getTotalCapacity() <= lectureItem.getCurrentCapacity()) {
             throw new BusinessException(ResponseCodeEnum.NO_REMAINING_REGISTRATION);
         }
     }
 
-    private void checkDuplicationApply(User user, LectureItem lectureItem){
-        if(lectureService.checkLectureRegistration(user, lectureItem)){
+    private void checkDuplicationApply(User user, LectureItem lectureItem) {
+        if (lectureService.checkLectureRegistration(user, lectureItem)) {
             throw new BusinessException(ResponseCodeEnum.ALREADY_APPLIED_LECTURE);
         }
     }
-    public SearchRegistrationResponse findRegistrationByUser(Long userId){
+
+    public SearchRegistrationResponse findRegistrationByUser(Long userId) {
 
         User user = userService.findUserById(userId);
         List<LectureRegistration> registrationList = lectureService.findLectureRegistrationByUser(user);
@@ -84,12 +94,31 @@ public class LectureFacade {
                 .userName(user.getUserName())
                 .appliedRegistrationResponseList(
                         registrationList.stream()
-                                .map(registration-> new SearchRegistrationResponse.AppliedRegistrationResponse(
-                                            registration.getLectureItem().getLecture().getLectureName(),
-                                            registration.getLectureItem().getLecture().getTutorName(),
-                                            registration.getLectureItem().getStartTime(),
-                                            registration.getCreateDate()
+                                .map(registration -> new SearchRegistrationResponse.AppliedRegistrationResponse(
+                                        registration.getLectureItem().getLecture().getLectureName(),
+                                        registration.getLectureItem().getLecture().getTutorName(),
+                                        registration.getLectureItem().getStartTime(),
+                                        registration.getCreateDate()
                                 )).collect(Collectors.toList())
                 ).build();
+    }
+
+    private static LocalDateTime getDateCond(SearchLectureItemRequest dto) {
+        LocalDateTime now = LocalDateTime.now();
+        int year = now.getYear();
+        int month = now.getMonth().getValue();
+        int day = now.getDayOfMonth();
+
+        if (dto.getYear() != null) {
+            year = dto.getYear();
+        }
+        if (dto.getMonth() != null) {
+            month = dto.getMonth();
+        }
+        if (dto.getDay() != null) {
+            day = dto.getDay();
+        }
+
+        return LocalDate.of(year, month, day).atStartOfDay();
     }
 }
